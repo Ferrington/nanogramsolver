@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'nonogramsolver/style.css' %}">
+    <title>Nonogram Solver</title>
+</head>
+<body>
+
+<div class="container-fluid">
+	{% csrf_token %}
+
+    <div class="form-row get-dims">
+        <div class="col-sm-2">
+            <label for="row_size">Rows</label>
+            <input type="text" class="form-control" id="row-size">
+        </div>
+         <div class="col-sm-2">
+            <label for="row_size">Columns</label>
+            <input type="text" class="form-control" id="col-size">
+        </div>
+        <div class="col-sm-2">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-primary btn-block" id="def-go">Go!</button>
+        </div>
+    </div>
+
+	<div class="grid">
+		<table>
+		</table>
+		<div>
+            <button type="button" class="btn btn-primary btn-block" id="solve">Solve</button>
+        </div>
+	</div>
+	
+	<div id="def-input-pop">
+		<input type="text" class="form-control" id="def-input" placeholder="Enter Rules (Ex: 1 2 1)">
+	</div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+<script>
+$(function() {	
+	var grid = [];
+	var row_defs = [];
+	var col_defs = [];
+	var $focused;
+	var square_size = 30;
+	var border_allow = 3;
+	
+    $('#def-go').click(function() {
+		grid = [];
+		row_defs = [];
+		col_defs = [];
+        var rows = parseInt($('#row-size').val());
+        var cols = parseInt($('#col-size').val());
+			
+		for (let i = 0; i < rows; i++) {
+			grid[i] = [];
+			for (let j = 0; j < cols; j++) {
+				grid[i][j] = 0;
+			}
+		}
+		
+		draw_grid();
+        $('#solve').show();
+    });
+
+    $('#solve').click(function() {
+		var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
+		
+		$.post('ajax/', {row_defs: JSON.stringify(row_defs), col_defs: JSON.stringify(col_defs), csrfmiddlewaretoken: CSRFtoken}, function(data) {
+			grid = data.grid;
+			draw_grid();
+		}, 'json');
+		
+    });
+	
+	$(window).resize(function() {
+		if ($('.grid').is(":visible")) {
+			draw_grid()
+		}
+	});
+	
+	$('body').on('click', '.table-row-def', function() {
+		$focused = $(this);
+		$focused.addClass('highlighted-def');
+		$('#def-input-pop').show().position({
+			my: "right-10",
+			at: "left",
+			of: $focused
+		});
+		$('#def-input').focus();
+	});
+
+	$('body').on('click', '.table-col-def', function() {
+		$focused = $(this);
+		$focused.addClass('highlighted-def');
+		$('#def-input-pop').show().position({
+			my: "bottom-10",
+			at: "top",
+			of: $focused
+		});
+		$('#def-input').focus();
+	});
+	
+	$('#def-input-pop').focusout(function (e) {
+		var input = $('#def-input').val().trim().split(' ');
+		var def_type = $focused.data('def-type');
+		$focused.removeClass('highlighted-def');
+		$('#def-input').val('');
+		$(this).hide();
+		
+		if (input[0] == '') {
+			return;
+		}
+		
+		var defs = [];
+		var html = '';
+		$.each(input, function(i,v) {
+			html += "<span class='def-num'>"+ v +"</span>";
+			defs.push(parseInt(v))
+		});
+		
+		if (def_type == 'row') {
+			$focused.html(html);
+			if (input.length > 2) {
+				$focused.width(input.length * (square_size + border_allow));
+			}
+		} else if (def_type == 'col') {
+			$focused.html(html);
+		}
+		
+		if (def_type == 'row') {
+			row_defs[$focused.data('row-index')] = defs;
+		} else if (def_type == 'col') {
+			col_defs[$focused.data('row-index')] = defs;
+		}
+		
+		$(".def-num").css({
+			"width": square_size + 'px',
+			"height": square_size + 'px',
+			"font-size": square_size * .5 + 'px',
+			"line-height": square_size + 'px'
+		});
+		
+		$focused.removeClass('highlighted-def');
+		$('#def-input').val('');
+		$(this).hide();
+	});
+	
+	$(document).keypress(function(e) {
+		var $focus_ele = $(':focus');
+		 if (e.keyCode == 9 && $focus_ele.attr('id') == 'def-input') {
+			e.preventDefault();
+			$focus_ele.blur();
+			
+			if (e.shiftKey) {
+				var index = parseInt($focused.data('row-index')) - 1;
+				var def_type = $focused.data('def-type');
+
+				if (def_type == 'row' && index <= -1) {
+					def_type = 'col';
+					index = grid[0].length - 1;
+				} else if (def_type == 'col' && index <= -1) {
+					def_type = 'row';
+					index = grid.length - 1;
+				}
+			} else {			
+				var index = parseInt($focused.data('row-index')) + 1;
+				var def_type = $focused.data('def-type');
+
+				if (def_type == 'row' && index >= grid.length) {
+					def_type = 'col';
+					index = 0;
+				} else if (def_type == 'col' && index >= grid[0].length) {
+					def_type = 'row';
+					index = 0;
+				}
+			}
+			
+			
+			$('[data-row-index="'+ index +'"][data-def-type="'+ def_type +'"]').click();
+		 }
+		 if (e.keyCode == 13 && $focus_ele.attr('id') == 'def-input') {
+			$focus_ele.blur();
+		 }
+		
+	});
+	
+	
+	function draw_grid() {
+		var $grid_ele = $('.grid');	
+		var $table = $('.grid table');
+		var rows = grid.length;
+		var cols = grid[0].length;
+		
+		var square_count = rows * cols;
+		
+		$table.html('');
+		
+		var adjust_row_def = [];
+		var html = "<tr><th id='empty-corner'></th>";
+		for (let j = 0; j < cols; j++) {
+			let spans = '';
+			$.each(col_defs[j], function(i,v) {
+				spans += "<span class='def-num'>"+ v +"</span>";
+			});
+			html += "<th class='table-col-def' data-def-type='col' data-row-index='"+ j +"'>"+ spans +"</th>"
+		}
+		html += "</tr>";
+		
+		for (let i = 0; i < rows; i++) {
+			let spans = '';
+			$.each(row_defs[i], function(index,v) {
+				spans += "<span class='def-num'>"+ v +"</span>";
+			});
+		
+			if (row_defs[i]) {
+				adjust_row_def.push(row_defs[i].length)
+			}
+			
+			html += "<tr>";
+			html += "<th class='table-row-def' data-def-type='row' data-row-index='"+ i +"'>"+ spans +"</th>"
+			for (let j = 0; j < cols; j++) {				
+				let td;
+				if (grid[i][j] == 2) {
+					td = "<td class='filled'></td>";
+				} else {
+					td = "<td></td>";
+				}
+				html += td;
+			}
+			html += "</tr>";
+		}
+		
+		$table.html(html);
+		
+		$(".grid table td").css({
+			"width": square_size,
+			"height": square_size
+		});
+		
+		$(".table-col-def").css({
+			"width": square_size,
+			"height": square_size * 2
+		});
+
+		$(".def-num").css({
+			"width": square_size + 'px',
+			"height": square_size + 'px',
+			"font-size": square_size * .5 + 'px',
+			"line-height": square_size + 'px'
+		});	
+
+		$(".table-row-def").css({
+			"width": 2 * (square_size + border_allow),
+			"height": square_size
+		});
+
+		$("#def-input-pop").css({
+			"width": 4 * square_size
+		});
+		
+		$.each(adjust_row_def, function(i,v) {
+			if (v > 2) {
+				$('[data-row-index="'+ i +'"][data-def-type="row"]').css({"width": v * (square_size + border_allow)});
+			}
+		});
+		
+	}
+	
+	
+});
+</script>
+</body>
+</html>
