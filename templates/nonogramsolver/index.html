@@ -72,11 +72,15 @@ $(function() {
 
     $('#solve').click(function() {
 		var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
-		
-		$.post('ajax/', {row_defs: JSON.stringify(row_defs), col_defs: JSON.stringify(col_defs), csrfmiddlewaretoken: CSRFtoken}, function(data) {
+		console.log(row_defs);	
+		$.post('{% url 'ajax' %}', {row_defs: JSON.stringify(row_defs), col_defs: JSON.stringify(col_defs), csrfmiddlewaretoken: CSRFtoken}, function(data) {
+			console.log(data);
 			grid = data.grid;
 			draw_grid();
-		}, 'json');
+		}, 'json')
+	    	.fail(function (jqXHR, textStatus, error) {
+		        console.log("Post error: " + error);
+    		});
 		
     });
 	
