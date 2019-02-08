@@ -52,6 +52,8 @@ $(function() {
 	var square_size = 30;
 	var border_allow = 3;
 	
+
+	
     $('#def-go').click(function() {
 		grid = [];
 		row_defs = [];
@@ -111,6 +113,46 @@ $(function() {
 		});
 		$('#def-input').focus();
 	});
+			
+	$('body').on('keydown', '#def-input', function(e) {
+		var $focus_ele = $(':focus');
+		
+		 if (e.keyCode == 9) {
+			e.preventDefault();
+			$focus_ele.blur();
+			
+			if (e.shiftKey) {
+				var index = parseInt($focused.data('row-index')) - 1;
+				var def_type = $focused.data('def-type');
+
+				if (def_type == 'row' && index <= -1) {
+					def_type = 'col';
+					index = grid[0].length - 1;
+				} else if (def_type == 'col' && index <= -1) {
+					def_type = 'row';
+					index = grid.length - 1;
+				}
+			} else {			
+				var index = parseInt($focused.data('row-index')) + 1;
+				var def_type = $focused.data('def-type');
+
+				if (def_type == 'row' && index >= grid.length) {
+					def_type = 'col';
+					index = 0;
+				} else if (def_type == 'col' && index >= grid[0].length) {
+					def_type = 'row';
+					index = 0;
+				}
+			}
+			
+			
+			$('[data-row-index="'+ index +'"][data-def-type="'+ def_type +'"]').click();
+		 }
+		 if (e.keyCode == 13 && $focus_ele.attr('id') == 'def-input') {
+			$focus_ele.blur();
+		 }
+		
+	});
 	
 	$('#def-input-pop').focusout(function (e) {
 		var input = $('#def-input').val().trim().split(' ');
@@ -156,45 +198,7 @@ $(function() {
 		$('#def-input').val('');
 		$(this).hide();
 	});
-	
-	$(document).keypress(function(e) {
-		var $focus_ele = $(':focus');
-		 if (e.keyCode == 9 && $focus_ele.attr('id') == 'def-input') {
-			e.preventDefault();
-			$focus_ele.blur();
-			
-			if (e.shiftKey) {
-				var index = parseInt($focused.data('row-index')) - 1;
-				var def_type = $focused.data('def-type');
 
-				if (def_type == 'row' && index <= -1) {
-					def_type = 'col';
-					index = grid[0].length - 1;
-				} else if (def_type == 'col' && index <= -1) {
-					def_type = 'row';
-					index = grid.length - 1;
-				}
-			} else {			
-				var index = parseInt($focused.data('row-index')) + 1;
-				var def_type = $focused.data('def-type');
-
-				if (def_type == 'row' && index >= grid.length) {
-					def_type = 'col';
-					index = 0;
-				} else if (def_type == 'col' && index >= grid[0].length) {
-					def_type = 'row';
-					index = 0;
-				}
-			}
-			
-			
-			$('[data-row-index="'+ index +'"][data-def-type="'+ def_type +'"]').click();
-		 }
-		 if (e.keyCode == 13 && $focus_ele.attr('id') == 'def-input') {
-			$focus_ele.blur();
-		 }
-		
-	});
 	
 	
 	function draw_grid() {
