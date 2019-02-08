@@ -51,7 +51,7 @@ $(function() {
 	var $focused;
 	var square_size = 30;
 	var border_allow = 3;
-	
+	var def_num_adjust = 3;
 
 	
     $('#def-go').click(function() {
@@ -174,7 +174,7 @@ $(function() {
 		if (def_type == 'row') {
 			$focused.html(html);
 			if (input.length > 2) {
-				$focused.width(input.length * (square_size + border_allow));
+				$focused.width(input.length * (square_size));
 			}
 		} else if (def_type == 'col') {
 			$focused.html(html);
@@ -187,10 +187,10 @@ $(function() {
 		}
 		
 		$(".def-num").css({
-			"width": square_size + 'px',
-			"height": square_size + 'px',
+			"width": square_size - def_num_adjust + 'px',
+			"height": square_size - def_num_adjust + 'px',
 			"font-size": square_size * .5 + 'px',
-			"line-height": square_size + 'px'
+			"line-height": square_size - def_num_adjust + 'px'
 		});
 		
 		$focused.removeClass('highlighted-def');
@@ -219,37 +219,18 @@ $(function() {
 		
 		$table.html('');
 		
-		var adjust_row_def = [];
 		var html = "<tr><th id='empty-corner'></th>";
 		for (let j = 0; j < cols; j++) {
-			let spans = '';
-			$.each(col_defs[j], function(i,v) {
-				spans += "<span class='def-num'>"+ v +"</span>";
-			});
-			html += "<th class='table-col-def' data-def-type='col' data-row-index='"+ j +"'>"+ spans +"</th>"
+			html += "<th class='table-col-def' data-def-type='col' data-row-index='"+ j +"'></th>"
 		}
 		html += "</tr>";
 		
 		for (let i = 0; i < rows; i++) {
-			let spans = '';
-			$.each(row_defs[i], function(index,v) {
-				spans += "<span class='def-num'>"+ v +"</span>";
-			});
-		
-			if (row_defs[i]) {
-				adjust_row_def.push(row_defs[i].length)
-			}
 			
 			html += "<tr>";
-			html += "<th class='table-row-def' data-def-type='row' data-row-index='"+ i +"'>"+ spans +"</th>"
+			html += "<th class='table-row-def' data-def-type='row' data-row-index='"+ i +"'></th>"
 			for (let j = 0; j < cols; j++) {				
-				let td;
-				if (grid[i][j] == 2) {
-					td = "<td class='filled'></td>";
-				} else {
-					td = "<td></td>";
-				}
-				html += td;
+				html += "<td></td>";
 			}
 			html += "</tr>";
 		}
@@ -264,28 +245,22 @@ $(function() {
 		});
 		
 		$(".table-col-def").css({
-			"min-width": square_size + "px",
-			"width": square_size + "px",
-			"min-height": square_size * 2 + "px",
-			"height": square_size * 2 + "px"
+			"min-width": square_size + border_allow + "px",
+			"width": square_size + border_allow + "px",
+			"min-height": 2 * (square_size + border_allow) + "px",
+			"height": 2 * (square_size + border_allow) + "px"
 		});
 		
 		$(".table-row-def").css({
 			"min-width": 2 * (square_size + border_allow) + "px",
-			"min-height": square_size + "px",
+			"min-height": square_size + border_allow + "px",
 			"width": 2 * (square_size + border_allow) + "px",
-			"height": square_size + "px"
+			"height": square_size + border_allow + "px"
 		});
 
 		$("#def-input-pop").css({
 			"min-width": 4 * square_size + "px",
 			"width": 4 * square_size + "px"
-		});
-		
-		$.each(adjust_row_def, function(i,v) {
-			if (v > 2) {
-				$('[data-row-index="'+ i +'"][data-def-type="row"]').css({"width": v * (square_size + border_allow)});
-			}
 		});
 		
 	}
