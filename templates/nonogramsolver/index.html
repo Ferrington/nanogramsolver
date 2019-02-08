@@ -36,7 +36,7 @@
 	</div>
 	
 	<div id="def-input-pop">
-		<input type="text" class="form-control" id="def-input" placeholder="Enter Rules (Ex: 1 2 1)">
+		<input type="text" class="form-control" id="def-input" placeholder="Ex: 1 2 1">
 	</div>
 
 </div>
@@ -74,11 +74,10 @@ $(function() {
 
     $('#solve').click(function() {
 		var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
-		console.log(row_defs);	
+	
 		$.post('{% url 'ajax' %}', {row_defs: JSON.stringify(row_defs), col_defs: JSON.stringify(col_defs), csrfmiddlewaretoken: CSRFtoken}, function(data) {
-			console.log(data);
 			grid = data.grid;
-			draw_grid();
+			update_grid();
 		}, 'json')
 	    	.fail(function (jqXHR, textStatus, error) {
 		        console.log("Post error: " + error);
@@ -199,7 +198,16 @@ $(function() {
 		$(this).hide();
 	});
 
-	
+	function update_grid() {
+		$('div.grid td').removeClass('filled');
+		var rows = grid.length;
+		var cols = grid[0].length;
+		$('div.grid td').each(function(index) {
+			if (grid[Math.floor(index / rows)][index % cols] == 2) {
+				$(this).addClass('filled');
+			}
+		});
+	}
 	
 	function draw_grid() {
 		var $grid_ele = $('.grid');	
@@ -249,29 +257,29 @@ $(function() {
 		$table.html(html);
 		
 		$(".grid table td").css({
-			"width": square_size,
-			"height": square_size
+			"min-width": square_size + "px",
+			"width": square_size + "px",
+			"min-height": square_size + "px",
+			"height": square_size + "px"
 		});
 		
 		$(".table-col-def").css({
-			"width": square_size,
-			"height": square_size * 2
+			"min-width": square_size + "px",
+			"width": square_size + "px",
+			"min-height": square_size * 2 + "px",
+			"height": square_size * 2 + "px"
 		});
-
-		$(".def-num").css({
-			"width": square_size + 'px',
-			"height": square_size + 'px',
-			"font-size": square_size * .5 + 'px',
-			"line-height": square_size + 'px'
-		});	
-
+		
 		$(".table-row-def").css({
-			"width": 2 * (square_size + border_allow),
-			"height": square_size
+			"min-width": 2 * (square_size + border_allow) + "px",
+			"min-height": square_size + "px",
+			"width": 2 * (square_size + border_allow) + "px",
+			"height": square_size + "px"
 		});
 
 		$("#def-input-pop").css({
-			"width": 4 * square_size
+			"min-width": 4 * square_size + "px",
+			"width": 4 * square_size + "px"
 		});
 		
 		$.each(adjust_row_def, function(i,v) {
