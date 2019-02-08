@@ -26,6 +26,10 @@
             <button type="button" class="btn btn-primary btn-block" id="def-go">Go!</button>
         </div>
     </div>
+	
+	<div class='err-message'>
+		&nbsp;
+	</div>
 
 	<div class="grid">
 		<table>
@@ -92,14 +96,21 @@ $(function() {
 	});
 	
 	$('body').on('click', '.table-row-def', function() {
+		var defs = [];
+	
 		$focused = $(this);
+		$focused.find('.def-num').each(function() {
+			defs.push(Number($(this).text()));
+		});
+		
 		$focused.addClass('highlighted-def');
 		$('#def-input-pop').show().position({
 			my: "right-10",
 			at: "left",
 			of: $focused
 		});
-		$('#def-input').focus();
+		
+		$('#def-input').val(defs.join(' ')).focus();
 	});
 
 	$('body').on('click', '.table-col-def', function() {

@@ -1,5 +1,6 @@
 .get-dims {
-    margin:50px auto;
+    margin:0 auto;
+	margin-top:50px;
     max-width:500px;
     justify-content:center;
 }
@@ -88,4 +89,10 @@
 }
 .highlighted-def {
 	background-color: #ADD8E6;
+}
+.err-message {
+	margin-top:5px;
+	text-align:center;
+	color:red;
+	display:none;
 }
