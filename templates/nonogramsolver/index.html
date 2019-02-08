@@ -114,14 +114,21 @@ $(function() {
 	});
 
 	$('body').on('click', '.table-col-def', function() {
+		var defs = [];
+	
 		$focused = $(this);
+		$focused.find('.def-num').each(function() {
+			defs.push(Number($(this).text()));
+		});
+		
 		$focused.addClass('highlighted-def');
 		$('#def-input-pop').show().position({
 			my: "bottom-10",
 			at: "top",
 			of: $focused
 		});
-		$('#def-input').focus();
+		
+		$('#def-input').val(defs.join(' ')).focus();
 	});
 			
 	$('body').on('keydown', '#def-input', function(e) {
